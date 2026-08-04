@@ -2,18 +2,18 @@ import mongoose from "mongoose"
 
 const userSchema = new mongoose.Schema({
     clerkId: {
-        type: string,
+        type: String,
         required: true,
         unique: true,
         index: true
     },
     name: {
-        type: string,
+        type: String,
         required: true,
         trim: true,
     },
     email: {
-        type: string,
+        type: String,
         required: true,
         unique: true,
         lowercase: true,
@@ -21,6 +21,6 @@ const userSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-const user = mongoose.model("User", userSchema)
+const User = mongoose.model("User", userSchema)
 
 export default User

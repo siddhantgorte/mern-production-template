@@ -1,5 +1,5 @@
-import http from "http"
 import dotenv from "dotenv"
+import http from "http"
 
 import app from "./src/app.js"
 import connectDB from "./src/common/config/db.js"
@@ -15,7 +15,7 @@ async function startServer() {
         
         const server = http.createServer(app)
         
-        server.listen(PORT, () => {
+        server.listen(PORT, "0.0.0.0", () => {
             console.log(`Server running on http://localhost:${PORT}`)
         })
     } catch (error) {

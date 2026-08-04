@@ -1,5 +1,6 @@
 import User from "./user.model.js"
 import { clerkClient } from "@clerk/express"
+import ApiError from "../../common/utils/api-error.js"
 
 const getOrCreateUser = async (clerkId) => {
     let user = await User.findOne({ clerkId })
@@ -10,11 +11,19 @@ const getOrCreateUser = async (clerkId) => {
 
     const clerkUser = await clerkClient.users.getUser(clerkId)
 
+    const email = clerkUser.emailAddresses[0]?.emailAddress
+
+    if (!email) {
+        throw ApiError.notFound("User email not available from Clerk")
+    }
+    
     user = await User.create({
         clerkId: clerkUser.id,
         name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim(),
-        email: clerkUser.emailAddresses[0]?.emailAddress
+        email
     })
+
+
 
     return user
 }
