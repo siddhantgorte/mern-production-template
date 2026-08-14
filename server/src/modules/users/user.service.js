@@ -1,44 +1,30 @@
 import User from "./user.model.js"
-import { clerkClient } from "@clerk/express"
-import ApiError from "../../common/utils/api-error.js"
 
-const getOrCreateUser = async (clerkId) => {
-    let user = await User.findOne({ clerkId })
-
-    if (user) {
-        return user
-    }
-
-    const clerkUser = await clerkClient.users.getUser(clerkId)
-
-    const email = clerkUser.emailAddresses[0]?.emailAddress
-
-    if (!email) {
-        throw ApiError.notFound("User email not available from Clerk")
-    }
-    
-    user = await User.create({
-        clerkId: clerkUser.id,
-        name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim(),
-        email
-    })
-
-
-
-    return user
-}
-
-const getUserByClerkId = async (clerkId) => {
-    return await User.findOne({ clerkId })
+const getUserByAuthId = async (authUserId) => {
+    return await User.findOne({ authUserId })
 }
 
 const createUser = async (userData) => {
     return await User.create(userData)
 }
 
-const updateUser = async (clerkId, userData) => {
+const getOrCreateUser = async (authUser) => {
+    let user = await getUserByAuthId(authUser.id)
+
+    if (user) {
+        return user
+    }
+
+    return await createUser({
+        authUserId: authUser.id,
+        name: authUser.name,
+        email: authUser.email
+    })
+}
+
+const updateUser = async (authUserId, userData) => {
     return await User.findOneAndUpdate(
-        { clerkId },
+        { authUserId },
         userData,
         {
             new: true,
@@ -47,13 +33,13 @@ const updateUser = async (clerkId, userData) => {
     )
 }
 
-const deleteUser = async (clerkId) => {
-    return await User.findOneAndDelete({ clerkId })
+const deleteUser = async (authUserId) => {
+    return await User.findOneAndDelete({ authUserId })
 }
 
 export {
+    getUserByAuthId,
     getOrCreateUser,
-    getUserByClerkId,
     createUser,
     updateUser,
     deleteUser

@@ -1,3 +1,24 @@
-import { requireAuth } from "@clerk/express"
+import { fromNodeHeaders } from "better-auth/node"
 
-export default requireAuth
+import getAuth from "../config/auth.js"
+import ApiError from "../utils/api-error.js"
+
+const authMiddleware = async (req, res, next) => {
+    try {
+        const session = await getAuth().api.getSession({
+            headers: fromNodeHeaders(req.headers)
+        })
+
+        if (!session) {
+            throw ApiError.unauthorized()
+        }
+
+        req.auth = session
+
+        next()
+    } catch (error) {
+        next(error)
+    }
+}
+
+export default authMiddleware
