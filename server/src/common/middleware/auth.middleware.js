@@ -10,7 +10,7 @@ const authMiddleware = async (req, res, next) => {
         })
 
         if (!session) {
-            throw ApiError.unauthorized()
+            throw ApiError.unauthorized("Unauthorized")
         }
 
         req.auth = session

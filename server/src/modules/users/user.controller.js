@@ -12,6 +12,20 @@ const getMe = async (req, res) => {
     return ApiResponse.ok(res, "User Profile", user)
 }
 
+const updateMe = async (req, res) => {
+    const user = await userService.updateUser(
+        req.auth.user.id,
+        req.body
+    )
+
+    if (!user) {
+        throw ApiError.notFound("User Not Found")
+    }
+
+    return ApiResponse.ok(res, "User Profile Updated", user)
+}
+
 export {
-    getMe
+    getMe,
+    updateMe
 }

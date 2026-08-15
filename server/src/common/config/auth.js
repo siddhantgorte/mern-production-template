@@ -10,6 +10,9 @@ const getAuth = () => {
         auth = betterAuth({
             database: mongodbAdapter(getMongoDB()),
 
+            baseURL: process.env.BETTER_AUTH_URL,
+            secret: process.env.BETTER_AUTH_SECRET,
+            
             trustedOrigins: [
                 process.env.CLIENT_URL
             ],
