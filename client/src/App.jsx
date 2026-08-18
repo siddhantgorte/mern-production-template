@@ -1,9 +1,7 @@
+import AppRouter from "./routes/app-router.jsx"
+
 function App() {
-    return (
-        <div>
-            <h1>MERN Production Template</h1>
-        </div>
-    )
+    return <AppRouter />
 }
 
 export default App
