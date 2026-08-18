@@ -14,8 +14,9 @@ const getAuth = () => {
             secret: process.env.BETTER_AUTH_SECRET,
             
             trustedOrigins: [
+                "http://localhost:5173",
                 process.env.CLIENT_URL
-            ],
+            ].filter(Boolean),
             
             emailAndPassword: {
                 enabled: true

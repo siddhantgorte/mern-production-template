@@ -1,6 +1,6 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
-import { BrowserRouter, useNavigate } from "react-router-dom"
+import { BrowserRouter, Link, useNavigate } from "react-router-dom"
 
 import { AuthProvider } from "@better-auth-ui/react"
 
@@ -15,6 +15,7 @@ const AuthProviderWrapper = ({ children }) => {
         <AuthProvider
             authClient={authClient}
             navigate={navigate}
+            Link={Link}
         >
             {children}
         </AuthProvider>
