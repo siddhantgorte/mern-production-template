@@ -1,13 +1,14 @@
-import Router from "express"
-import * as userController from "./user.controller.js"
+import express from "express"
+
 import authMiddleware from "../../common/middleware/auth.middleware.js"
-import validate from "../../common/middleware/validate.middleware.js"
-import { UpdateUserDto } from "./user.dto.js"
+import userController from "./user.controller.js"
 
-const router = Router()
+const router = express.Router()
 
-router.get("/me", authMiddleware, userController.getMe)
-
-router.patch("/me", authMiddleware, validate(UpdateUserDto), userController.updateMe)
+router.get(
+    "/me",
+    authMiddleware,
+    userController.getCurrentUser
+)
 
 export default router

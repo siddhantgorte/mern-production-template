@@ -1,509 +1,275 @@
-# MERN Production Template
+# 🚀 MERN Production Template
 
-This repository is a reusable production-oriented backend template for a MERN-style application. At the moment, the codebase contains the server-side foundation for an Express + MongoDB + Better Auth application, with a reusable module structure for future features.
+A clean, modular, and production-ready full-stack **MERN (MongoDB, Express, React, Node.js)** template with **Better Auth (Google OAuth SSO)**, **Tailwind CSS**, and a **Modular Architecture**.
 
-This repository does not currently include a frontend application, so the documentation below focuses on the backend implementation that is actually present in the codebase.
+---
 
-## Table of Contents
+## 📖 Table of Contents
 
-- [Project Overview](#project-overview)
-- [Repository Structure](#repository-structure)
-- [Technology Stack](#technology-stack)
-- [Architecture and Request Flow](#architecture-and-request-flow)
-- [Environment Variables](#environment-variables)
-- [Installation and Setup](#installation-and-setup)
-- [Database Configuration](#database-configuration)
-- [Authentication](#authentication)
-- [Users Module](#users-module)
-- [Validation Architecture](#validation-architecture)
-- [Middleware](#middleware)
-- [Error Handling and API Responses](#error-handling-and-api-responses)
-- [API Reference](#api-reference)
-- [Development Conventions](#development-conventions)
-- [Security Notes](#security-notes)
-- [Reusable Module Pattern](#reusable-module-pattern)
-- [Possible Future Improvements](#possible-future-improvements)
+- [Features](#-features)
+- [Project Structure](#-project-structure)
+- [Tech Stack](#-tech-stack)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [1. Clone and Install Dependencies](#1-clone-and-install-dependencies)
+  - [2. Google Cloud Console Configuration](#2-google-cloud-console-configuration)
+  - [3. Environment Variables](#3-environment-variables)
+  - [4. Running the Project](#4-running-the-project)
+- [Architecture & Request Flow](#-architecture--request-flow)
+  - [Backend Modular Architecture](#backend-modular-architecture)
+  - [Frontend Architecture](#frontend-architecture)
+  - [Authentication & Session Flow](#authentication--session-flow)
+- [API Endpoints](#-api-endpoints)
+- [Adding New Modules (Backend)](#-adding-new-modules-backend)
+- [License](#-license)
 
-## Project Overview
+---
 
-The project is designed as a starting point for future applications that need:
+## ✨ Features
 
-- Express 5 backend
-- MongoDB + Mongoose integration
-- Better Auth authentication
-- Reusable module-based feature organization
-- Centralized validation and error handling
-- Standardized API response formatting
+### Backend (`server/`)
+- **Modular Architecture**: Feature-based domain modules (`src/modules/users/`) rather than flat MVC.
+- **Single DB Connection Pool**: Mongoose + Better Auth share a single native MongoDB connection via `getMongoDB()`.
+- **Better Auth (Google SSO)**: Secure cookie-based session management with Google OAuth 2.0.
+- **Standardized Error & Response Formatting**: `ApiError` class and `ApiResponse` static helper methods.
+- **DTO Validation**: Declarative validation using `Joi` and `BaseDto` schemas.
+- **Production Security**: Helmet, CORS with credentials, Rate Limiting, Request ID tracking, and Morgan request logger.
 
-The current implementation includes a working users module, authentication middleware, and relevant backend infrastructure for a production-style Express service.
+### Frontend (`client/`)
+- **Vite + React 19**: Ultra-fast build and hot module replacement.
+- **Tailwind CSS v4**: Modern, responsive utility-first styling.
+- **Better Auth Client**: Official `better-auth/react` client with cookie credentials.
+- **React Router 7**:
+  - Public **Landing Page** (`/`) with Hero and Call-to-Action.
+  - Dedicated **Login Page** (`/login`) with Google Single Sign-On.
+  - Protected **Dashboard** (`/dashboard`) with navigation guards (`ProtectedRoute`).
+- **Dynamic Navbar**: Displays authenticated user's Google profile picture, display name/email, and Logout action.
+- **API Client Service**: Pre-configured `api.js` fetch wrapper with `credentials: "include"`.
 
-## Repository Structure
+---
 
-The workspace contains a single server application under the `server/` directory.
+## 📁 Project Structure
 
 ```text
 Mern-Production-Template/
 ├── server/
-│   ├── .env
 │   ├── .env.example
-│   ├── .gitignore
 │   ├── package.json
-│   ├── package-lock.json
-│   ├── server.js
+│   ├── server.js                          # Server bootstrap & DB connection
 │   └── src/
-│       ├── app.js
+│       ├── app.js                         # Express app, middlewares, routes
 │       ├── common/
 │       │   ├── config/
-│       │   │   ├── auth.js
-│       │   │   ├── db.js
-│       │   │   └── process.js
+│       │   │   ├── auth.js                # Better Auth singleton setup (Google SSO)
+│       │   │   └── db.js                  # Single Mongoose & MongoDB connection
 │       │   ├── dto/
-│       │   │   └── base.dto.js
+│       │   │   └── base.dto.js            # Base Joi validation class
 │       │   ├── middleware/
-│       │   │   ├── auth.middleware.js
-│       │   │   ├── error.middleware.js
-│       │   │   ├── logger.middleware.js
-│       │   │   ├── not-found.middleware.js
-│       │   │   ├── rate-limit.middleware.js
-│       │   │   ├── request-id.middleware.js
-│       │   │   └── validate.middleware.js
+│       │   │   ├── auth.middleware.js     # Better Auth session guard
+│       │   │   ├── error.middleware.js    # Centralized error handler
+│       │   │   └── validate.middleware.js # DTO validation middleware
 │       │   └── utils/
-│       │       ├── api-error.js
-│       │       └── api-response.js
+│       │       ├── api-error.js           # Custom ApiError class
+│       │       └── api-response.js        # Standardized ApiResponse helper
 │       └── modules/
-│           ├── _template/
-│           │   ├── _template.controller.js
-│           │   ├── _template.model.js
-│           │   ├── _template.routes.js
-│           │   └── _template.service.js
 │           └── users/
-│               ├── user.controller.js
-│               ├── user.dto.js
-│               ├── user.model.js
-│               ├── user.routes.js
-│               └── user.service.js
+│               ├── user.controller.js     # User route controller
+│               ├── user.routes.js         # User API endpoints (/api/users)
+│               └── user.service.js        # User business logic
+│
+└── client/
+    ├── .env.example
+    ├── package.json
+    ├── vite.config.js
+    └── src/
+        ├── App.jsx                        # Application root
+        ├── main.jsx                       # React entry point with BrowserRouter
+        ├── index.css                      # Tailwind CSS imports
+        ├── components/
+        │   ├── Navbar.jsx                 # Dynamic header (Profile avatar, Logout)
+        │   └── ProtectedRoute.jsx         # Client-side session guard
+        ├── pages/
+        │   ├── LandingPage.jsx            # Public landing page template
+        │   ├── LoginPage.jsx              # Google login page
+        │   └── DashboardPage.jsx          # Protected user dashboard
+        ├── routes/
+        │   └── AppRouter.jsx              # Application route definitions
+        ├── lib/
+        │   └── auth-client.js             # Better Auth browser client
+        └── services/
+            └── api.js                     # Generic fetch API wrapper
 ```
 
-### Purpose of the main folders
+---
 
-- `common/`: shared application infrastructure used across the app
-- `config/`: database, auth, and process-level configuration
-- `dto/`: DTO definitions and validation schemas
-- `middleware/`: request middleware for auth, validation, logging, error handling, and routing protection
-- `utils/`: reusable helpers such as API error and response wrappers
-- `modules/`: feature-focused modules organized by domain
-- `users/`: application-level user profile and user-related endpoints
-- `_template/`: starter module pattern for creating new features
+## 🛠️ Tech Stack
 
-## Technology Stack
+- **Backend**: Node.js, Express 5, MongoDB, Mongoose, Better Auth, Joi, Helmet, CORS, Morgan, Express Rate Limit
+- **Frontend**: React 19, Vite, Tailwind CSS v4, Better Auth React, React Router 7, Lucide Icons
+- **Authentication**: Better Auth with Google OAuth (HTTP-only cookies)
 
-The backend currently uses the following packages from `server/package.json`:
+---
 
-- Express 5 (`express`)
-- MongoDB driver (`mongodb`)
-- Mongoose (`mongoose`)
-- Better Auth (`better-auth`)
-- Joi (`joi`)
-- CORS (`cors`)
-- Helmet (`helmet`)
-- Rate limiting (`express-rate-limit`)
-- Dotenv (`dotenv`)
-- Nodemon for development (`nodemon`)
+## 🚀 Getting Started
 
-## Architecture and Request Flow
+### Prerequisites
+- Node.js (v18+ recommended)
+- MongoDB database (local or MongoDB Atlas)
+- Google Cloud Console account (for Google OAuth credentials)
 
-The backend follows a modular architecture rather than a single global MVC layout. Each feature is organized under `src/modules/<feature>/` with separate responsibilities for routes, controller logic, and service logic.
+---
 
-The general request flow is:
+### 1. Clone and Install Dependencies
 
-```text
-Request
-→ Middleware
-→ Authentication
-→ Validation
-→ Controller
-→ Service
-→ Model / Database
-→ API Response
+```bash
+# Clone the repository
+git clone https://github.com/siddhantgorte/mern-production-template.git
+cd mern-production-template
+
+# Install backend dependencies
+cd server
+npm install
+
+# Install frontend dependencies
+cd ../client
+npm install
 ```
 
-This is reflected in the current users flow and the reusable module structure.
+---
 
-## Environment Variables
+### 2. Google Cloud Console Configuration
 
-Environment variables are defined in `server/.env.example` and should be copied into a local `.env` file before running the server.
+1. Visit [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project and configure **APIs & Services > OAuth consent screen**:
+   - User Type: **External**
+   - Scopes: `email`, `profile`, `openid`
+   - Test Users: Add your Google email.
+3. Under **APIs & Services > Credentials > Create Credentials > OAuth Client ID**:
+   - Application type: **Web application**
+   - **Authorized JavaScript origins**:
+     - `http://localhost:5173`
+     - `http://localhost:5000`
+   - **Authorized redirect URIs**:
+     - `http://localhost:5000/api/auth/callback/google`
+4. Copy the generated **Client ID** and **Client Secret**.
+
+---
+
+### 3. Environment Variables
+
+#### Backend (`server/.env`)
+Create `server/.env` based on `server/.env.example`:
 
 ```env
 # Server
-PORT=3000
+PORT=5000
 NODE_ENV=development
 
-# MongoDB
-MONGODB_URI=
+# MongoDB (Change this URI to connect to any database)
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/mern-template?retryWrites=true&w=majority
+
+# CORS
+CORS_ORIGIN=http://localhost:5173
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=100
 
 # Better Auth
-BETTER_AUTH_SECRET=
-BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=your_random_32_character_secret_key
+BETTER_AUTH_URL=http://localhost:5000
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # Frontend
 CLIENT_URL=http://localhost:5173
 ```
 
-### Variable descriptions
+#### Frontend (`client/.env`)
+Create `client/.env` based on `client/.env.example`:
 
-| Variable | Purpose |
-| --- | --- |
-| `PORT` | Port number used by the Express server. Default is `3000` in the project config. |
-| `NODE_ENV` | Runtime environment indicator used by error handling logic. |
-| `MONGODB_URI` | MongoDB connection string used by Mongoose and the Better Auth MongoDB adapter. |
-| `BETTER_AUTH_SECRET` | Secret used by Better Auth for signing and session security. |
-| `BETTER_AUTH_URL` | Base URL used by Better Auth. |
-| `CLIENT_URL` | Trusted frontend origin used by CORS and Better Auth trusted origins. |
-
-Never commit real secrets or production credentials into source control.
-
-## Installation and Setup
-
-From the project root:
-
-```bash
-cd server
-npm install
-cp .env.example .env
+```env
+VITE_API_URL=http://localhost:5000
 ```
 
-Then configure the values in `.env` before starting the app.
+---
 
-### Start the development server
+### 4. Running the Project
+
+In separate terminal tabs:
 
 ```bash
+# 1. Start backend (from server/ directory)
+cd server
+npm run dev
+
+# 2. Start frontend (from client/ directory)
+cd client
 npm run dev
 ```
 
-This runs the app through `nodemon server.js`.
+- **Frontend**: `http://localhost:5173`
+- **Backend API**: `http://localhost:5000`
+- **Health Check**: `http://localhost:5000/health`
 
-### Start the production server
+---
 
-```bash
-npm start
-```
+## 🏛️ Architecture & Request Flow
 
-This runs `node server.js`.
-
-## Database Configuration
-
-The project connects to MongoDB using both Mongoose and the native MongoDB client.
-
-- `mongoose.connect(process.env.MONGODB_URI)` is used for the application model layer.
-- `MongoClient` is also created and connected to the same database so Better Auth can use the MongoDB adapter.
-- The connection is created in `src/common/config/db.js`.
-
-The repository does not expose any real MongoDB URI or credentials in source files.
-
-### Database note
-
-Better Auth is configured with the MongoDB adapter, and the code uses its database connection for authentication storage. The application also defines an application-level `User` model for user profiles associated with Better Auth users.
-
-## Authentication
-
-Authentication is handled through Better Auth.
-
-The configuration in `src/common/config/auth.js` includes:
-
-- MongoDB adapter for Better Auth
-- `baseURL` from `BETTER_AUTH_URL`
-- `secret` from `BETTER_AUTH_SECRET`
-- `trustedOrigins` from `CLIENT_URL`
-- email/password authentication enabled via `emailAndPassword: { enabled: true }`
-
-The app exposes the Better Auth request handler under:
+### Authentication & Session Flow
 
 ```text
-/api/auth/*
+1. User clicks "Continue with Google" on Frontend (localhost:5173/login)
+   │
+2. authClient.signIn.social({ provider: "google" }) redirects to Better Auth handler
+   │
+3. Express Server (localhost:5000/api/auth/sign-in/social) redirects to Google OAuth
+   │
+4. User consents on Google -> Google redirects to /api/auth/callback/google
+   │
+5. Better Auth exchanges authorization code, verifies identity, and sets HttpOnly session cookie
+   │
+6. User redirected to /dashboard -> ProtectedRoute verifies session via authClient.useSession()
+   │
+7. Frontend fetches /api/users/me -> authMiddleware attaches session to req.auth
 ```
 
-This is mounted in `src/app.js` through:
+---
 
-```js
-app.all("/api/auth/*splat", (req, res) => {
-  return toNodeHandler(getAuth())(req, res)
-})
-```
+## 🔌 API Endpoints
 
-The authentication middleware in `src/common/middleware/auth.middleware.js` calls Better Auth's `getSession` API using `fromNodeHeaders(req.headers)`. If no valid session is found, it rejects the request with an unauthorized error.
+| Method | Endpoint | Protection | Description |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/health` | Public | Health check / server status |
+| `ALL` | `/api/auth/*` | Public / Better Auth | Better Auth OAuth endpoints |
+| `GET` | `/api/users/me` | `authMiddleware` | Returns the authenticated session user |
 
-This project uses a session-based authentication flow via Better Auth, and the application profile is associated with the Better Auth user through `authUserId` on the application `User` model.
+---
 
-## Users Module
+## 📦 Adding New Modules (Backend)
 
-The current users module stores an application-level user profile that is associated with a Better Auth user.
-
-### User model
-
-The `User` model in `src/modules/users/user.model.js` currently includes:
-
-- `authUserId` (required, unique)
-- `name` (required)
-- `email` (required, unique, lowercase, trimmed)
-- `createdAt` and `updatedAt` from Mongoose timestamps
-
-### Current API endpoints
-
-| Method | Endpoint | Authentication | Purpose |
-| --- | --- | --- | --- |
-| `GET` | `/api/users/me` | Required | Returns the authenticated user's application profile and creates it if missing. |
-| `PATCH` | `/api/users/me` | Required | Updates the authenticated user's profile name. |
-| `ALL` | `/api/auth/*` | Varies by Better Auth route | Better Auth route handling. |
-| `GET` | `/health` | Not required | Simple health check endpoint. |
-
-### Behavior
-
-#### GET /api/users/me
-
-- Validates the current session via Better Auth.
-- Reads the authenticated user from `req.auth.user`.
-- Calls `getOrCreateUser()` to ensure an application profile exists.
-- Returns the user profile in the standard API response format.
-
-#### PATCH /api/users/me
-
-- Requires authentication.
-- Validates the request body using `UpdateUserDto` and Joi.
-- Allows updating the user's `name`.
-- Does not allow the client to change `authUserId`.
-- Uses the authenticated Better Auth user ID implicitly rather than accepting a user ID from the request body.
-
-## Validation Architecture
-
-Validation is implemented with Joi and a reusable `BaseDto` class.
-
-`src/common/dto/base.dto.js` contains a `BaseDto` class with:
-
-- `Joi.object({})` as the default schema
-- `validate(data)` that returns `{ errors, value }`
-- `abortEarly: false` so all validation problems are reported together
-- `stripUnknown: true` to remove keys not defined in the schema
-
-The validation middleware in `src/common/middleware/validate.middleware.js` does the following:
-
-- calls `DtoClass.validate(req.body)`
-- throws `ApiError.badRequest(...)` if validation fails
-- replaces `req.body` with the sanitized validated value
-- calls `next()` on success
-
-Validation is currently applied to the request body for the user update endpoint. The codebase does not show query-string or route-parameter validation middleware.
-
-## Middleware
-
-The application registers middleware in `src/app.js` in the following order:
-
-1. `requestIdMiddleware`
-2. `logger`
-3. `helmet()`
-4. `cors({ origin: process.env.CLIENT_URL, credentials: true })`
-5. `apiRateLimiter`
-6. Better Auth route handling (`/api/auth/*`)
-7. JSON and URL-encoded body parsers
-8. `userRoutes`
-9. `GET /health`
-10. `notFoundMiddleware`
-11. `errorMiddleware`
-
-### Middleware implemented in the project
-
-- `request-id.middleware.js`: assigns a request ID to each request and adds the `X-Request-ID` response header.
-- `logger.middleware.js`: logs method, URL, status code, and latency.
-- `helmet`: adds basic HTTP security headers.
-- `cors`: allows configured frontend origin access with credentials.
-- `rate-limit.middleware.js`: applies rate limiting to API requests.
-- `auth.middleware.js`: fetches the active Better Auth session and rejects unauthenticated requests.
-- `validate.middleware.js`: enforces Joi-based DTO validation for request bodies.
-- `not-found.middleware.js`: converts unknown routes into a 404 API error.
-- `error.middleware.js`: centralizes error handling and sends JSON responses.
-
-`express.json({ limit: "1mb" })` and `express.urlencoded({ extended: true, limit: "1mb" })` are also configured.
-
-## Error Handling and API Responses
-
-The project defines two reusable response helpers:
-
-### `ApiError`
-
-In `src/common/utils/api-error.js`, the app defines a custom `ApiError` with status codes for:
-
-- `400` Bad Request
-- `401` Unauthorized
-- `403` Forbidden
-- `404` Not Found
-- `409` Conflict
-
-This class is used throughout the app to raise structured errors.
-
-### `ApiResponse`
-
-In `src/common/utils/api-response.js`, responses follow this pattern:
-
-```json
-{
-  "success": true,
-  "message": "...",
-  "data": {}
-}
-```
-
-The project mostly uses this wrapper for successful responses.
-
-### Global error handling
-
-The global error middleware in `src/common/middleware/error.middleware.js`:
-
-- logs the error
-- chooses the status code from `err.statusCode` or falls back to `500`
-- hides internal details in production when appropriate
-- returns JSON with `success: false`, `message`, and `requestId`
-
-Example error format:
-
-```json
-{
-  "success": false,
-  "message": "Unauthorized",
-  "requestId": "..."
-}
-```
-
-The `requestId` is set by the request ID middleware and included in error responses when the request passes through that middleware.
-
-### 404 handling
-
-`not-found.middleware.js` catches unmatched routes and passes an `ApiError.notFound(...)` to the global error middleware.
-
-### Process-level error handlers
-
-`src/common/config/process.js` registers:
-
-- `uncaughtException`
-- `unhandledRejection`
-
-These handlers log the issue and exit the process to avoid continuing in an unstable state.
-
-## API Reference
-
-### Health check
-
-| Method | Endpoint | Auth | Purpose |
-| --- | --- | --- | --- |
-| `GET` | `/health` | No | Returns a simple success response indicating the server is running. |
-
-### User endpoints
-
-| Method | Endpoint | Auth | Purpose |
-| --- | --- | --- | --- |
-| `GET` | `/api/users/me` | Yes | Returns the authenticated user's application profile. |
-| `PATCH` | `/api/users/me` | Yes | Updates the authenticated user's profile information. |
-
-### Better Auth route mount
-
-| Method | Endpoint | Auth | Purpose |
-| --- | --- | --- | --- |
-| `ALL` | `/api/auth/*` | Depends on Better Auth route | Routes requests to the configured Better Auth handler. |
-
-### Example requests
-
-#### Get current user
-
-```http
-GET /api/users/me
-```
-
-Requires an authenticated Better Auth session.
-
-#### Update current user
-
-```http
-PATCH /api/users/me
-Content-Type: application/json
-```
-
-Example body:
-
-```json
-{
-  "name": "Jane Doe"
-}
-```
-
-The app sanitizes unknown fields and only allows the `name` field in the current DTO schema.
-
-## Development Conventions
-
-The codebase shows a few clear patterns that are worth following when building on this template:
-
-- ES modules are used (`import` / `export` syntax)
-- async/await is used for database and auth operations
-- Modules are organized by feature rather than by a single global MVC structure
-- Controller/service layering is used in the users module and template module
-- DTO validation is centralized via Joi and a base DTO class
-- errors are centralized via `ApiError`
-- successful responses are centralized via `ApiResponse`
-
-## Security Notes
-
-The project implements several security-related measures:
-
-- CORS is configured with a trusted frontend origin
-- Helmet adds security headers
-- Rate limiting is enabled for API requests
-- Request body size limits are enforced (`1mb` JSON and form bodies)
-- Better Auth is used for session-based authentication
-- Joi validation sanitizes incoming request bodies
-- Secrets are expected to come from environment variables rather than being embedded in source files
-
-This repository is not claiming complete or exhaustive security coverage; it provides a reasonable production-oriented foundation with common backend protections enabled.
-
-## Reusable Module Pattern
-
-The project includes a template module in `server/src/modules/_template/` that demonstrates the module pattern:
+To add a new feature (e.g. `posts`), create a folder under `server/src/modules/posts/`:
 
 ```text
-_template/
-├── _template.controller.js
-├── _template.routes.js
-├── _template.service.js
-├── _template.model.js
+server/src/modules/posts/
+├── post.model.js       # Mongoose Schema & Model
+├── post.dto.js         # Joi validation schema extending BaseDto
+├── post.service.js     # Database operations and business logic
+├── post.controller.js  # Request/response handler using ApiResponse
+└── post.routes.js      # Express router with authMiddleware & validate()
 ```
 
-This pattern can be used as a starting point for new features:
+Then mount the route in `server/src/app.js`:
+```javascript
+import postRoutes from "./modules/posts/post.routes.js"
 
-1. Copy the `_template` folder
-2. Rename the files to match the new feature name
-3. Update the routes, controller, and service logic
-4. Add a model only when the feature needs one
+app.use("/api/posts", postRoutes)
+```
 
-The codebase does not enforce a rigid “every module must have a model” rule; the template simply provides a reusable pattern.
+---
 
-## Database Collections
+## 📄 License
 
-The application defines a Mongoose model named `User` for application-level user profiles. Better Auth is configured to use the MongoDB adapter and manages authentication records in the database it uses. In practical terms, the project clearly relies on a MongoDB database with at least:
-
-- `users` collection for the application profile model
-- Better Auth-managed auth collections such as `user`, `session`, and `account`, depending on the adapter’s schema conventions
-
-The repository itself does not define those Better Auth collection schemas directly; they are managed by Better Auth through the configured MongoDB adapter.
-
-## Possible Future Improvements
-
-These are ideas for future work and are not currently implemented in the repository:
-
-- Environment variable validation at startup
-- Automated tests for controllers, services, and middleware
-- API documentation tooling such as Swagger or OpenAPI generation
-- Production deployment configuration
-- Additional authentication providers
-- More reusable feature modules beyond the starter pattern
-
-## Notes
-
-- The repository is currently backend-focused; no frontend code is present in the workspace.
-- The app uses a modular server architecture intended to be extended for future projects.
-- The current implementation already includes common production boilerplate for authentication, validation, monitoring, and API responses.
+This project is licensed under the [ISC License](LICENSE).

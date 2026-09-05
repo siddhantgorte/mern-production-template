@@ -1,70 +1,93 @@
 import express from "express"
 import cors from "cors"
+import helmet from "helmet"
+import rateLimit from "express-rate-limit"
+import morgan from "morgan"
+
 import { toNodeHandler } from "better-auth/node"
 
-import getAuth from "./common/config/auth.js"
-import userRoutes from "./modules/users/user.routes.js"
+import { getAuth } from "./common/config/auth.js"
 import errorMiddleware from "./common/middleware/error.middleware.js"
-import helmet from "helmet"
-import apiRateLimiter from "./common/middleware/rate-limit.middleware.js"
-import logger from "./common/middleware/logger.middleware.js"
-import requestIdMiddleware from "./common/middleware/request-id.middleware.js"
-import notFoundMiddleware from "./common/middleware/not-found.middleware.js"
+
+import userRoutes from "./modules/users/user.routes.js"
 
 const app = express()
 
 // Middlewares
 
-app.use(requestIdMiddleware)
-
-app.use(logger)
+app.use(
+    cors({
+        origin: [
+            "http://localhost:5173",
+            process.env.CLIENT_URL
+        ].filter(Boolean),
+        credentials: true
+    })
+)
 
 app.use(helmet())
 
-const allowedOrigins = [
-    "http://localhost:5173",
-    process.env.CLIENT_URL
-].filter(Boolean)
+app.use(
+    rateLimit({
+        windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+        max: Number(process.env.RATE_LIMIT_MAX) || 100,
+        standardHeaders: true,
+        legacyHeaders: false
+    })
+)
 
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true)
-        } else {
-            callback(new Error("Not allowed by CORS"))
-        }
-    },
-    credentials: true
-}))
+app.use((req, res, next) => {
+    req.id = crypto.randomUUID()
+    res.setHeader("X-Request-ID", req.id)
 
-app.use(apiRateLimiter)
-
-// Better Auth
-app.all("/api/auth/*splat", (req, res) => {
-    return toNodeHandler(getAuth())(req, res)
+    next()
 })
 
-// Body parsers
-app.use(express.json({
-    limit: "1mb"
-}))
+app.use(morgan("combined"))
 
-app.use(express.urlencoded({
-    extended: true,
-    limit: "1mb"
-}))
+// Better Auth
 
-// Routes
-app.use("/api/users", userRoutes)
+app.all(
+    "/api/auth/*splat",
+    (req, res, next) => {
+        toNodeHandler(getAuth())(req, res, next)
+    }
+)
+
+// Body Parsers
+
+app.use(express.json({ limit: "1mb" }))
+
+app.use(
+    express.urlencoded({
+        extended: true,
+        limit: "1mb"
+    })
+)
+
+// Health Check
 
 app.get("/health", (_req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Server is running...",
-  });
-});
+    res.status(200).json({
+        success: true,
+        message: "Server is running..."
+    })
+})
 
-app.use(notFoundMiddleware)
+// Routes
+
+app.use("/api/users", userRoutes)
+
+// 404 Handler
+
+app.use((_req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Route not found"
+    })
+})
+
+// Error Handling
 
 app.use(errorMiddleware)
 

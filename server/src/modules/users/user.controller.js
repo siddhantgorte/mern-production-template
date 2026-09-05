@@ -1,31 +1,16 @@
-import * as userService from "./user.service.js"
+import userService from "./user.service.js"
 import ApiResponse from "../../common/utils/api-response.js"
-import ApiError from "../../common/utils/api-error.js"
 
-const getMe = async (req, res) => {
-    const user = await userService.getOrCreateUser(req.auth.user)
+const getCurrentUser = async (req, res, next) => {
+    try {
+        const user = await userService.getCurrentUser(req.auth)
 
-    if (!user) {
-        throw ApiError.notFound("User Not Found")
+        return ApiResponse.ok(res, "Authenticated user", user)
+    } catch (error) {
+        next(error)
     }
-
-    return ApiResponse.ok(res, "User Profile", user)
 }
 
-const updateMe = async (req, res) => {
-    const user = await userService.updateUser(
-        req.auth.user.id,
-        req.body
-    )
-
-    if (!user) {
-        throw ApiError.notFound("User Not Found")
-    }
-
-    return ApiResponse.ok(res, "User Profile Updated", user)
-}
-
-export {
-    getMe,
-    updateMe
+export default {
+    getCurrentUser
 }
