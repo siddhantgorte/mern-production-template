@@ -13,6 +13,9 @@ import userRoutes from "./modules/users/user.routes.js"
 
 const app = express()
 
+// Trust Render reverse proxy for secure cookies and correct protocol handling
+app.set("trust proxy", 1)
+
 // Middlewares
 
 app.use(
