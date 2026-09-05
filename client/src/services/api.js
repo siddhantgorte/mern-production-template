@@ -1,9 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "")
 
 const apiRequest = async (endpoint, options = {}) => {
     const isFormData = options.body instanceof FormData
+    const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await fetch(`${API_URL}${cleanEndpoint}`, {
         ...options,
 
         credentials: "include",

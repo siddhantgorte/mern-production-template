@@ -3,6 +3,7 @@ import cors from "cors"
 import helmet from "helmet"
 import rateLimit from "express-rate-limit"
 import morgan from "morgan"
+import crypto from "node:crypto"
 
 import { toNodeHandler } from "better-auth/node"
 

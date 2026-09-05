@@ -29,6 +29,8 @@ export const getAuth = () => {
             },
 
             account: {
+                storeStateStrategy: "database",
+                skipStateCookieCheck: true,
                 accountLinking: {
                     enabled: true,
                     trustedProviders: ["google"],
