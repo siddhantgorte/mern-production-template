@@ -17,7 +17,7 @@ const LoginPage = () => {
 
             const { error: signInError } = await authClient.signIn.social({
                 provider: "google",
-                callbackURL: "http://localhost:5173/dashboard"
+                callbackURL: `${window.location.origin}/dashboard`
             })
 
             if (signInError) {

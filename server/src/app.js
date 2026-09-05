@@ -65,7 +65,14 @@ app.use(
     })
 )
 
-// Health Check
+// Root & Health Check
+
+app.get("/", (_req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "MERN Production Backend API is running."
+    })
+})
 
 app.get("/health", (_req, res) => {
     res.status(200).json({
