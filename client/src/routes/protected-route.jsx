@@ -1,13 +1,16 @@
 import { Navigate, Outlet } from "react-router-dom"
-import { useSession } from "@better-auth-ui/react"
 
 import authClient from "../lib/auth-client.js"
 
 const ProtectedRoute = () => {
-    const { data: session, isPending } = useSession(authClient)
+    const { data: session, isPending } = authClient.useSession()
 
     if (isPending) {
-        return <p>Loading...</p>
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <p className="text-sm text-muted-foreground">Loading...</p>
+            </div>
+        )
     }
 
     if (!session?.user) {
@@ -18,3 +21,4 @@ const ProtectedRoute = () => {
 }
 
 export default ProtectedRoute
+

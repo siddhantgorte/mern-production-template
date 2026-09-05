@@ -16,11 +16,7 @@ const getAuth = () => {
             trustedOrigins: [
                 "http://localhost:5173",
                 process.env.CLIENT_URL
-            ].filter(Boolean),
-            
-            emailAndPassword: {
-                enabled: true
-            }
+            ].filter(Boolean)
         })
     }
 
