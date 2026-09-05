@@ -87,7 +87,7 @@ const LoginPage = () => {
                         type="button"
                         onClick={handleGoogleSignIn}
                         disabled={isSigningIn}
-                        className="mt-8 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-700 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="mt-8 flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-slate-700 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {isSigningIn ? (
                             <>

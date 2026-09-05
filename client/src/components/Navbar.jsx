@@ -75,7 +75,7 @@ const Navbar = () => {
                         <button
                             type="button"
                             onClick={handleSignOut}
-                            className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+                            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white"
                         >
                             <LogOut className="h-4 w-4" />
                             <span>Sign Out</span>
