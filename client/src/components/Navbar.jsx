@@ -2,6 +2,7 @@ import { LogOut } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 
 import { authClient } from "../lib/auth-client"
+import { toast } from "sonner"
 
 const Navbar = () => {
     const navigate = useNavigate()
@@ -16,12 +17,14 @@ const Navbar = () => {
     const handleSignOut = async () => {
         try {
             await authClient.signOut()
+            toast.success("Signed out successfully")
 
             navigate("/login", {
                 replace: true
             })
         } catch (error) {
             console.error("Sign out failed:", error)
+            toast.error("Failed to sign out. Please try again.")
         }
     }
 

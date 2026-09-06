@@ -3,6 +3,7 @@ import { useState } from "react"
 import { Link, Navigate } from "react-router-dom"
 
 import { authClient } from "../lib/auth-client"
+import { toast } from "sonner"
 
 const LoginPage = () => {
     const [error, setError] = useState("")
@@ -21,15 +22,18 @@ const LoginPage = () => {
             })
 
             if (signInError) {
-                setError(
-                    signInError.message || "Unable to sign in with Google."
-                )
+                const message = signInError.message || "Unable to sign in with Google."
+
+                setError(message)
+                toast.error(message)
+                
                 setIsSigningIn(false)
             }
         } catch (error) {
             console.error("Google sign-in failed:", error)
-
-            setError("Something went wrong. Please try again.")
+            const message = "Something went wrong. Please try again."
+            setError(message)
+            toast.error(message)
             setIsSigningIn(false)
         }
     }
