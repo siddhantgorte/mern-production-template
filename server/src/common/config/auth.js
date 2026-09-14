@@ -27,6 +27,12 @@ export const getAuth = () => {
                 }
             },
 
+            emailAndPassword: {
+                enabled: true,
+                requireEmailVerification: false,
+                minPasswordLength: 8,
+            },
+
             account: {
                 storeStateStrategy: "database",
                 skipStateCookieCheck: true,
