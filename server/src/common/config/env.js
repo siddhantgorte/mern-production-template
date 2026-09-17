@@ -24,7 +24,11 @@ const envSchema = Joi.object({
     }),
     GOOGLE_CLIENT_SECRET: Joi.string().required().messages({
         "any.required": "GOOGLE_CLIENT_SECRET is required for Google OAuth."
-    })
+    }),
+    RESEND_API_KEY: Joi.string().required().messages({
+        "any.required": "RESEND_API_KEY is required for sending emails."
+    }),
+    EMAIL_FROM: Joi.string().default("MERN Template <onboarding@resend.dev>")
 }).unknown(true) // Allows other system/OS environment variables to be present without failing.
 
 export const validateEnv = () => {

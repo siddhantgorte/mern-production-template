@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth"
 import { mongodbAdapter } from "better-auth/adapters/mongodb"
 
 import { getMongoDB } from "./db.js"
+import { sendWelcomeEmail } from "../services/email.service.js"
 
 let auth
 
@@ -48,6 +49,22 @@ export const getAuth = () => {
                     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
                 },
             },
+
+                     databaseHooks: {
+             user: {
+                 create: {
+                     after: async (user) => {
+                         sendWelcomeEmail({
+                             to: user.email,
+                             name: user.name
+                         }).catch((err) => {
+                             console.error("❌ Failed to send welcome email:", err)
+                         })
+                     }
+                 }
+             }
+         },
+
         })
     }
 
