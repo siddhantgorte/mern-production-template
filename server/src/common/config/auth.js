@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth"
 import { mongodbAdapter } from "better-auth/adapters/mongodb"
 
 import { getMongoDB } from "./db.js"
-import { sendWelcomeEmail } from "../services/email.service.js"
+import { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail } from "../services/email.service.js"
 
 let auth
 
@@ -30,9 +30,37 @@ export const getAuth = () => {
 
             emailAndPassword: {
                 enabled: true,
-                requireEmailVerification: false,
+                requireEmailVerification: true,
                 minPasswordLength: 8,
+                sendResetPassword: async ({ user, url, token }) => {
+                    const resetUrl = token
+                        ? `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password?token=${token}`
+                        : url
+
+                    await sendPasswordResetEmail({
+                        to: user.email,
+                        name: user.name,
+                        url: resetUrl
+                    })
+                }
             },
+
+            emailVerification: {
+                sendOnSignUp: true,
+                autoSignInAfterVerification: false,
+                sendVerificationEmail: async ({ user, url, token }) => {
+                    const verificationUrl = token
+                        ? `${process.env.CLIENT_URL || "http://localhost:5173"}/verify-email?token=${token}`
+                        : url
+
+                    await sendVerificationEmail({
+                        to: user.email,
+                        name: user.name,
+                        url: verificationUrl
+                    })
+                }
+            },
+
 
             account: {
                 storeStateStrategy: "database",
