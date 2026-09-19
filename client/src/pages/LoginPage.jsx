@@ -15,6 +15,10 @@ const LoginPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false)
 
+    const [isForgotModalOpen, setIsForgotModalOpen] = useState(false)
+const [forgotEmail, setForgotEmail] = useState("")
+const [isSendingForgot, setIsSendingForgot] = useState(false)
+
     const { data: session, isPending } = authClient.useSession()
 
     const handleEmailAuth = async (e) => {
@@ -44,7 +48,7 @@ const LoginPage = () => {
                     name: name.trim(),
                     email: email.trim(),
                     password,
-                    callbackURL: `${window.location.origin}/dashboard`
+                    callbackURL: `${window.location.origin}/verify-email`
                 })
 
                 if (signUpError) {
@@ -55,8 +59,13 @@ const LoginPage = () => {
                     return
                 }
 
-                toast.success("Account created successfully!")
-                navigate("/dashboard", { replace: true })
+                toast.success("Account created! Please check your email to verify your account before signing in.", {
+                    duration: 6000
+                })
+                setMode("signin")
+                setName("")
+                setPassword("")
+                setIsSubmitting(false)
             } else {
                 const { data, error: signInError } = await authClient.signIn.email({
                     email: email.trim(),
@@ -65,7 +74,10 @@ const LoginPage = () => {
                 })
 
                 if (signInError) {
-                    const message = signInError.message || "Invalid email or password."
+                    let message = signInError.message || "Invalid email or password."
+                    if (signInError.code === "EMAIL_NOT_VERIFIED" || message.toLowerCase().includes("verify") || message.toLowerCase().includes("not verified")) {
+                        message = "Please verify your email address before signing in. Check your inbox for the verification link."
+                    }
                     setError(message)
                     toast.error(message)
                     setIsSubmitting(false)
@@ -106,6 +118,34 @@ const LoginPage = () => {
             setError(message)
             toast.error(message)
             setIsGoogleSigningIn(false)
+        }
+    }
+
+    const handleForgotPassword = async (e) => {
+        e.preventDefault()
+        if (!forgotEmail.trim()) {
+            toast.error("Please enter your email address.")
+            return
+        }
+        try {
+            setIsSendingForgot(true)
+            const { error: forgotError } = await authClient.requestPasswordReset({
+                email: forgotEmail.trim(),
+                redirectTo: `${window.location.origin}/reset-password`
+            })
+            if (forgotError) {
+                toast.error(forgotError.message || "Failed to send reset email.")
+                setIsSendingForgot(false)
+                return
+            }
+            toast.success("Password reset link sent to your email!")
+            setIsForgotModalOpen(false)
+            setForgotEmail("")
+            setIsSendingForgot(false)
+        } catch (err) {
+            console.error("Forgot password error:", err)
+            toast.error("Failed to send password reset email.")
+            setIsSendingForgot(false)
         }
     }
 
@@ -237,9 +277,20 @@ const LoginPage = () => {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-300">
-                                Password
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="block text-xs font-medium text-slate-300">
+                                    Password
+                                </label>
+                                {mode === "signin" && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsForgotModalOpen(true)}
+                                        className="text-xs text-slate-400 hover:text-white transition cursor-pointer"
+                                    >
+                                        Forgot password?
+                                    </button>
+                                )}
+                            </div>
                             <div className="relative mt-1.5">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                                     <Lock className="h-4 w-4" />
@@ -328,6 +379,47 @@ const LoginPage = () => {
                     </div>
                 </div>
             </div>
+            {isForgotModalOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-white">Reset Password</h2>
+            <p className="mt-1 text-xs text-slate-400">
+                Enter your registered email address to receive a password reset link.
+            </p>
+
+            <form onSubmit={handleForgotPassword} className="mt-4 space-y-4">
+                <input
+                    type="email"
+                    required
+                    placeholder="name@example.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    disabled={isSendingForgot}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950/60 py-2.5 px-3.5 text-sm text-white placeholder-slate-500 focus:border-slate-400 focus:outline-none"
+                />
+
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsForgotModalOpen(false)}
+                        disabled={isSendingForgot}
+                        className="flex-1 rounded-xl border border-slate-700 py-2.5 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={isSendingForgot}
+                        className="flex-1 rounded-xl bg-white py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-200 cursor-pointer disabled:opacity-60"
+                    >
+                        {isSendingForgot ? "Sending..." : "Send Link"}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+)}
+
         </div>
     )
 }
