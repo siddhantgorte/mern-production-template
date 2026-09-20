@@ -78,20 +78,43 @@ export const getAuth = () => {
                 },
             },
 
-                     databaseHooks: {
-             user: {
-                 create: {
-                     after: async (user) => {
-                         sendWelcomeEmail({
-                             to: user.email,
-                             name: user.name
-                         }).catch((err) => {
-                             console.error("❌ Failed to send welcome email:", err)
-                         })
-                     }
-                 }
-             }
-         },
+            databaseHooks: {
+                user: {
+                    create: {
+                        after: async (user) => {
+                            sendWelcomeEmail({
+                                to: user.email,
+                                name: user.name
+                            }).catch((err) => {
+                                console.error("❌ Failed to send welcome email:", err)
+                            })
+                        }
+                    }
+                },
+                account: {
+                    create: {
+                        after: async (account) => {
+                            if (account.providerId === "google" && account.idToken) {
+                                try {
+                                    const parts = account.idToken.split(".")
+                                    if (parts.length === 3) {
+                                        const payload = JSON.parse(Buffer.from(parts[1], "base64").toString())
+                                        if (payload.picture) {
+                                            const db = getMongoDB()
+                                            await db.collection("user").updateOne(
+                                                { _id: account.userId },
+                                                { $set: { image: payload.picture } }
+                                            )
+                                        }
+                                    }
+                                } catch (err) {
+                                    console.error("❌ Failed to sync Google avatar:", err)
+                                }
+                            }
+                        }
+                    }
+                }
+            },
 
         })
     }
